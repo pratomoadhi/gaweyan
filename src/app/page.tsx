@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import supabase from '@/lib/supabaseClient';
 import toast from 'react-hot-toast';
 
@@ -13,6 +14,9 @@ interface User {
 const PAGE_SIZE = 5;
 
 export default function Home() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -21,13 +25,36 @@ export default function Home() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
   const fetchUsers = async () => {
-    const { data, error } = await supabase.from('users').select('*');
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, name, email'); // only select needed fields
+
     if (error) {
-      alert('Error fetching users: ' + error.message);
+      toast.error('Error fetching users: ' + error.message);
       return;
     }
-    setUsers(data || []);
+
+    if (data) {
+      setUsers(data as User[]);
+    }
   };
+
+  // // Protect route
+  // useEffect(() => {
+  //   const checkAuth = async () => {
+  //     const { data } = await supabase.auth.getSession();
+  //     if (!data.session) {
+  //       router.push('/auth');
+  //     } else {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   checkAuth();
+  // }, [router]);
+
+  // if (loading) {
+  //   return <div className="p-6 text-center text-gray-500">Checking session...</div>;
+  // }
 
   useEffect(() => {
     fetchUsers();
@@ -105,6 +132,16 @@ export default function Home() {
   return (
     <main className="max-w-4xl mx-auto p-6">
       <h1 className="text-4xl font-bold mb-6 text-center">User Directory</h1>
+
+      <button
+        onClick={async () => {
+          await supabase.auth.signOut();
+          router.push('/auth');
+        }}
+        className="mb-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+      >
+        Logout
+      </button>
 
       <div className="mb-4 flex flex-col sm:flex-row sm:justify-between gap-4">
         <input
