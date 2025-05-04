@@ -15,7 +15,7 @@ const PAGE_SIZE = 5;
 
 export default function Home() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
 
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
